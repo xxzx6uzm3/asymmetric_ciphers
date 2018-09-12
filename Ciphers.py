@@ -2,9 +2,7 @@ from random import randint
 
 
 class AbstractCipher:
-    """
-    docstring
-    """
+    """ Contains a set of methods that are widely used in asymmetric ciphers """
 
     def __init__(self, plaintext=None, ciphertext=None):
         self.__pt = plaintext
@@ -71,23 +69,6 @@ class AbstractCipher:
             return x % m
 
     @staticmethod
-    def binary_pow(a, n):
-        """
-        Exponentiation by squaring
-        """
-
-        if n < 0:
-            return AbstractCipher.binary_pow(1 / a, -n)
-        elif n == 0:
-            return 1
-        elif n == 1:
-            return a
-        elif n % 2 == 0:
-            return AbstractCipher.binary_pow(a * a, n / 2)
-        elif n % 2 != 0:
-            return a * AbstractCipher.binary_pow(a * a, (n-1) / 2)
-
-    @staticmethod
     def get_rand_prime(a, b):
         """
         :param a: start point
@@ -104,9 +85,7 @@ class AbstractCipher:
 
 
 class RSA(AbstractCipher):
-    """
-    docstring
-    """
+    """ The class implements encryption and decryption by the rsa method """
 
     def __init__(self, plaintext=None, ciphertext=None, p=None, q=None, e=None):
         super().__init__(plaintext, ciphertext)
@@ -139,11 +118,9 @@ class RSA(AbstractCipher):
         return (self.get_p() - 1) * (self.get_q() - 1)
 
     def generate_e(self):
-        """
-        1 < e < euler AND gcd(e, euler) == 1
-        """
+        """ 1 < e < euler AND gcd(e, euler) == 1 """
 
-        e = randint(2, 25)  # mb not 25, euler
+        e = randint(2, 100)  # mb not 25, euler
         while self.gcd(e, self.get_euler()) != 1:
             e = randint(2, 25)
         self.set_e(e)
@@ -156,31 +133,24 @@ class RSA(AbstractCipher):
     def generate_key_pair(self, rsa_type):
         warning = None
         if rsa_type == "RSA-2048":
-            binary_key_size = 2048
             decimal_key_size = 617
             warning = False
         elif rsa_type == "RSA-1536":
-            binary_key_size = 1536
             decimal_key_size = 463
             warning = False
         elif rsa_type == "RSA-1024":
-            binary_key_size = 1024
             decimal_key_size = 309
             warning = False
         elif rsa_type == "RSA-896":
-            binary_key_size = 896
             decimal_key_size = 270
             warning = False
         elif rsa_type == "RSA-768":
-            binary_key_size = 768
             decimal_key_size = 232
             warning = True
         elif rsa_type == "RSA-704":
-            binary_key_size = 704
             decimal_key_size = 212
             warning = True
         elif rsa_type == "RSA-576":
-            binary_key_size = 576
             decimal_key_size = 174
             warning = True
 
@@ -191,7 +161,7 @@ class RSA(AbstractCipher):
             warn_message = ' '
         print(warn_message)
 
-        p_size = int(decimal_key_size / 2)
+        p_size = int(decimal_key_size / 2)  # 25
         q_size = decimal_key_size - p_size
 
         p = self.get_rand_prime(10 ** (p_size - 1), 10 ** p_size - 1)
@@ -203,25 +173,20 @@ class RSA(AbstractCipher):
         }
 
     def encrypt(self):
-        ct = pow(self.get_plaintext(), self.get_e(), self.get_n())
-        self.set_ciphertext(ct)
-        return self.get_ciphertext()
+        result = []
+        pt_as_num = [ord(x) for x in list(self.get_plaintext())]
+        for element in pt_as_num:
+            result.append(pow(element, self.get_e(), self.get_n()))
+        return result
+
+    def show_encrypted_mess(self):
+        for index, element in enumerate(self.encrypt()):
+            print(f'[{index}]: {element}')
+        return ''
 
     def decrypt(self):
-        return pow(self.get_ciphertext(), self.get_d(), self.get_n())
+        result = [chr(pow(x, self.get_d(), self.get_n())) for x in self.encrypt()]
+        return result
 
-
-# Wikipedia example
-# x = RSA(111111, p=511193910726569874953935919900363873129238346355395814309112665842586420644909876720511,
-        # q=494506884534583558326764414412197999730498705147369083365809132224425698427662508889603)  # e = 3
-x = RSA(111111)
-# print(x.get_n())
-# print(x.get_euler())
-# print(x.get_e())
-# print(x.get_d())
-# print(x.get_plaintext())
-# print(x.encrypt())
-# print(x.decrypt())
-# print(x.get_rand_prime(25790000, 35570000))
-# print(x.is_prime(31240019))
-print(x.generate_key_pair("RSA-576"))
+    def show_decrypted_mess(self):
+        return 'Decrypted message: ' + ''.join(self.decrypt())
